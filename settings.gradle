@@ -6,3 +6,7 @@ pluginManagement {
 }
 
 rootProject.name = 'box-sdk-wrapper'
+
+include 'common'
+include 'server'
+include 'client'

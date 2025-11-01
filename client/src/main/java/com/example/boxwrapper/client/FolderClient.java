@@ -75,7 +75,7 @@ public class FolderClient extends BaseClient {
      */
     public List<String> listFolderItems(String folderId) {
         String url = "/api/v1/folders/" + folderId + "/items";
-        return get(url, new TypeReference<List<String>>() {}.getClass());
+        return get(url, new TypeReference<List<String>>() {});
     }
 
     /**

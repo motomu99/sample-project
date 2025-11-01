@@ -22,7 +22,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Box APIクライアント管理
+ * Box APIクライアント管理.
+ *
+ * <p>APIキーとBox SDK接続のマッピングを管理し、JWT認証またはDeveloper Token認証を
+ * サポートします。複数のBox認証情報を管理し、ラウンドロビンでロードバランシングします。</p>
+ *
+ * <p>初期化時に設定ファイルから認証情報を読み込み、Box API接続を確立します。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Component

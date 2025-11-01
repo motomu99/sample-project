@@ -20,7 +20,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * ファイル操作コントローラー
+ * ファイル操作コントローラー.
+ *
+ * <p>Box ファイルに関するREST APIエンドポイントを提供します。
+ * アップロード、ダウンロード、情報取得、削除の操作をサポートします。</p>
+ *
+ * <p>全てのエンドポイントはAPIキー認証（X-API-Keyヘッダー）が必要です。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @RestController
@@ -33,6 +40,16 @@ public class FileController {
 
     private final BoxFileService fileService;
 
+    /**
+     * ファイルをBoxにアップロードします.
+     *
+     * <p>マルチパート形式でファイルを受け取り、指定されたフォルダにアップロードします。</p>
+     *
+     * @param folderId アップロード先のフォルダID（例: "0"）
+     * @param file アップロードするファイル
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return アップロード結果（ファイルID、名前、サイズなど）
+     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "ファイルアップロード", description = "指定されたフォルダにファイルをアップロード")
     public ResponseEntity<FileUploadResponse> uploadFile(
@@ -50,6 +67,13 @@ public class FileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * ファイルのメタデータ情報を取得します.
+     *
+     * @param fileId 対象ファイルのID
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return ファイル情報（名前、サイズ、作成日時など）
+     */
     @GetMapping("/{fileId}")
     @Operation(summary = "ファイル情報取得", description = "ファイルのメタデータを取得")
     public ResponseEntity<FileInfoResponse> getFileInfo(
@@ -64,6 +88,13 @@ public class FileController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * ファイルをダウンロードします.
+     *
+     * @param fileId ダウンロードするファイルのID
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return ファイルの内容（バイナリデータ）
+     */
     @GetMapping("/{fileId}/download")
     @Operation(summary = "ファイルダウンロード", description = "ファイルの内容をダウンロード")
     public ResponseEntity<byte[]> downloadFile(
@@ -84,6 +115,13 @@ public class FileController {
             .body(fileContent);
     }
 
+    /**
+     * ファイルを削除します.
+     *
+     * @param fileId 削除するファイルのID
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return 削除成功時は204 No Content
+     */
     @DeleteMapping("/{fileId}")
     @Operation(summary = "ファイル削除", description = "指定されたファイルを削除")
     public ResponseEntity<Void> deleteFile(

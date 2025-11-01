@@ -56,8 +56,9 @@ dependencies {
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.mockito:mockito-core:4.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.11.0'
+    testImplementation 'org.mockito:mockito-inline:4.11.0'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.0'
     testImplementation 'org.awaitility:awaitility:4.2.0'

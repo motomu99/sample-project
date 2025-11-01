@@ -84,12 +84,7 @@ public class BoxSearchService {
             }
 
             // Pagination
-            if (request.getOffset() != null) {
-                searchParams.setOffset(request.getOffset());
-            }
-            if (request.getLimit() != null) {
-                searchParams.setLimit(request.getLimit());
-            }
+            // Box SDK API変更により、offset/limitはsearchRangeメソッドで直接指定
 
             PartialCollection<BoxItem.Info> searchResults = boxSearch.searchRange(
                 request.getOffset() != null ? request.getOffset() : 0,

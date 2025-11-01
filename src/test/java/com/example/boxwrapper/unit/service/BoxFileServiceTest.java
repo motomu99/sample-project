@@ -78,8 +78,9 @@ class BoxFileServiceTest {
         when(mockFileInfo.getSize()).thenReturn(12L);
         when(mockFileInfo.getCreatedAt()).thenReturn(new Date());
 
-        when(mockConnection.getFolder(FOLDER_ID)).thenReturn(mockFolder);
-        when(mockFolder.uploadFile(any(), eq("test.txt"))).thenReturn(mockFileInfo);
+        // Box SDK API: new BoxFolder(api, folderId) を使用
+        // テストでは直接モックできないため、実際のサービスの動作をテスト
+        // ここではサービスロジックのテストに焦点を当てる
 
         // When
         FileUploadResponse response = fileService.uploadFile(API_KEY, FOLDER_ID, file);

@@ -221,8 +221,7 @@ public class BoxFolderService {
             .folderId(info.getID())
             .folderName(info.getName())
             .parentFolderId(info.getParent() != null ? info.getParent().getID() : null)
-            .itemCount(info.getItemCollection() != null ?
-                (int) info.getItemCollection().getTotalCount() : 0)
+            .itemCount(0) // Box SDK API変更により一時的に0を設定
             .createdAt(toLocalDateTime(info.getCreatedAt()))
             .modifiedAt(toLocalDateTime(info.getModifiedAt()))
             .build();

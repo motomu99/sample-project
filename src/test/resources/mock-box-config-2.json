@@ -1,0 +1,12 @@
+{
+  "boxAppSettings": {
+    "clientID": "mock-client-id-2",
+    "clientSecret": "mock-client-secret-2",
+    "appAuth": {
+      "publicKeyID": "mock-public-key-id-2",
+      "privateKey": "-----BEGIN ENCRYPTED PRIVATE KEY-----\nMock Private Key 2\n-----END ENCRYPTED PRIVATE KEY-----",
+      "passphrase": "mock-passphrase-2"
+    }
+  },
+  "enterpriseID": "mock-enterprise-id-2"
+}

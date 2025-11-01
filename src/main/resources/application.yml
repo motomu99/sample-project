@@ -1,0 +1,120 @@
+spring:
+  application:
+    name: box-sdk-wrapper
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+  cache:
+    type: caffeine
+    cache-names:
+      - folderInfo
+      - fileMetadata
+      - searchResults
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=300s
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+box:
+  auth:
+    type: jwt  # jwt or developer-token
+    config-file: classpath:box-config.json
+    developer-token: ${BOX_DEVELOPER_TOKEN:}
+
+  rate-limit:
+    enabled: true
+    requests-per-second: 10
+    adaptive: true
+
+  retry:
+    on-rate-limit: true
+    max-attempts: 5
+    respect-retry-after: true
+
+api:
+  keys:
+    - key: ${API_KEY_APP1:app1-key-xxxxx}
+      box-configs:
+        - classpath:box-app1-account1.json
+      load-balance: round-robin
+    - key: ${API_KEY_APP2:app2-key-yyyyy}
+      box-configs:
+        - classpath:box-app2.json
+
+async:
+  parallel:
+    max-concurrent-uploads: 5
+    max-concurrent-downloads: 5
+    semaphore-timeout-seconds: 30
+  thread-pool:
+    core-size: 10
+    max-size: 20
+    queue-capacity: 50
+    thread-name-prefix: "async-box-"
+
+resilience4j:
+  ratelimiter:
+    configs:
+      default:
+        registerHealthIndicator: true
+    instances:
+      boxApi:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+  retry:
+    configs:
+      default:
+        registerHealthIndicator: true
+    instances:
+      boxApi:
+        maxAttempts: 5
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
+          - com.box.sdk.BoxAPIException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+          - java.lang.IllegalStateException
+
+logging:
+  level:
+    root: INFO
+    com.example.boxwrapper: DEBUG
+    com.box.sdk: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{requestId}] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{requestId}] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/box-wrapper.log
+    max-size: 10MB
+    max-history: 30
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  show-actuator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized

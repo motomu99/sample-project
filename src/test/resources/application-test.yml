@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: box-sdk-wrapper-test
+  cache:
+    type: caffeine
+    cache-names:
+      - folderInfo
+      - fileMetadata
+      - searchResults
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=60s
+
+box:
+  auth:
+    type: developer-token
+    developer-token: mock-token-for-test
+
+  rate-limit:
+    enabled: false
+    requests-per-second: 100
+    adaptive: false
+
+api:
+  keys:
+    - key: test-api-key
+      box-configs:
+        - classpath:mock-box-config.json
+    - key: test-api-key-2
+      box-configs:
+        - classpath:mock-box-config-2.json
+
+async:
+  parallel:
+    max-concurrent-uploads: 2
+    max-concurrent-downloads: 2
+    semaphore-timeout-seconds: 5
+  thread-pool:
+    core-size: 2
+    max-size: 5
+    queue-capacity: 10
+    thread-name-prefix: "test-async-"
+
+resilience4j:
+  ratelimiter:
+    instances:
+      boxApi:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 1s
+
+  retry:
+    instances:
+      boxApi:
+        maxAttempts: 3
+        waitDuration: 100ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+logging:
+  level:
+    root: INFO
+    com.example.boxwrapper: DEBUG
+    org.springframework.test: INFO

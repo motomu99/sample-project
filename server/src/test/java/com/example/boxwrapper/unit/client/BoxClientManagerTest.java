@@ -22,9 +22,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
- * BoxClientManager????????.
+ * BoxClientManagerのユニットテスト.
  *
- * <p>?????API?????????????????????????????</p>
+ * <p>Box API接続管理のテストを実行します。</p>
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BoxClientManager Unit Tests")
@@ -57,7 +57,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("isValidApiKey - ?????API??????true?????")
+    @DisplayName("isValidApiKey - 正常系: 登録済みAPIキーの場合trueを返す")
     void testIsValidApiKey_RegisteredKey() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -78,7 +78,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("isValidApiKey - ????API??????false?????")
+    @DisplayName("isValidApiKey - 正常系: 未登録APIキーの場合falseを返す")
     void testIsValidApiKey_UnregisteredKey() {
         // Given
         when(apiProperties.getKeys()).thenReturn(new ArrayList<>());
@@ -91,7 +91,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("getConnection - ?????API?????????????")
+    @DisplayName("getConnection - 正常系: 登録済みAPIキーで接続が取得できること")
     void testGetConnection_RegisteredKey() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -114,7 +114,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("getConnection - ????API??????AuthenticationException????????")
+    @DisplayName("getConnection - 異常系: 未登録APIキーの場合AuthenticationExceptionがスローされる")
     void testGetConnection_UnregisteredKey() {
         // Given
         when(apiProperties.getKeys()).thenReturn(new ArrayList<>());
@@ -126,7 +126,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("getConnection - ???????????????????")
+    @DisplayName("getConnection - 正常系: 単一接続の取得")
     void testGetConnection_SingleConnection() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -150,12 +150,12 @@ class BoxClientManagerTest {
         assertNotNull(connection1);
         assertNotNull(connection2);
         assertNotNull(connection3);
-        // ???????????????????????????????
-        // ??????????Box SDK???????????null????????
+        // 注意: 実際のBox SDK接続はモックではnullになる可能性がある
+        // 実際のテストではBox SDKの接続オブジェクトが正しく生成されることを確認する
     }
 
     @Test
-    @DisplayName("getConnection - ????????????????????????")
+    @DisplayName("getConnection - 正常系: ラウンドロビン負荷分散")
     void testGetConnection_RoundRobinLoadBalancing() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -184,11 +184,11 @@ class BoxClientManagerTest {
         assertNotNull(connection2);
         assertNotNull(connection3);
         assertNotNull(connection4);
-        // ???????????????????????????null?????????
+        // 注意: 実際のBox SDK接続はモックではnullになる可能性がある
     }
 
     @Test
-    @DisplayName("initialize - Developer Token??????????????")
+    @DisplayName("initialize - 正常系: Developer Token認証で初期化成功")
     void testInitialize_DeveloperTokenAuth() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -210,7 +210,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("initialize - Developer Token????????????AuthenticationException????????")
+    @DisplayName("initialize - 異常系: Developer Tokenが設定されていない場合AuthenticationExceptionがスローされる")
     void testInitialize_DeveloperTokenNotConfigured() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -224,13 +224,13 @@ class BoxClientManagerTest {
         when(authConfig.getDeveloperToken()).thenReturn(null);
 
         // When & Then
-        // initialize()?????????????????catch???????????
-        // ??????????????????????????????????????
+        // initialize()実行時はエラーハンドリングにより例外がキャッチされる
+        // 実際のエラーはログに記録される
         assertDoesNotThrow(() -> clientManager.initialize());
     }
 
     @Test
-    @DisplayName("initialize - ??API??????????????")
+    @DisplayName("initialize - 正常系: 空のAPIキーリストで初期化成功")
     void testInitialize_EmptyApiKeyList() {
         // Given
         when(apiProperties.getKeys()).thenReturn(new ArrayList<>());
@@ -241,7 +241,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("initialize - ???API??????????????")
+    @DisplayName("initialize - 正常系: 複数APIキーで初期化成功")
     void testInitialize_MultipleApiKeys() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -270,13 +270,13 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("getConnection - ???????????AuthenticationException????????")
+    @DisplayName("getConnection - 異常系: 接続が存在しない場合AuthenticationExceptionがスローされる")
     void testGetConnection_NoConnections() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
         ApiProperties.ApiKeyConfig config = new ApiProperties.ApiKeyConfig();
         config.setKey(TEST_API_KEY);
-        config.setBoxConfigs(new ArrayList<>()); // ???????
+        config.setBoxConfigs(new ArrayList<>()); // 空リスト
         keyConfigs.add(config);
 
         when(apiProperties.getKeys()).thenReturn(keyConfigs);
@@ -291,7 +291,7 @@ class BoxClientManagerTest {
     }
 
     @Test
-    @DisplayName("???API?????????????????")
+    @DisplayName("正常系: 複数のAPIキーで独立した接続が取得できること")
     void testMultipleApiKeys_IndependentConnections() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
@@ -319,22 +319,22 @@ class BoxClientManagerTest {
         // Then
         assertNotNull(connection1);
         assertNotNull(connection2);
-        // ???API?????????????????????
+        // 複数のAPIキーでそれぞれ独立した接続が取得できることを確認
     }
 
     @Test
-    @DisplayName("??????????????API??????????????")
+    @DisplayName("正常系: エラーハンドリング - 不正なAPIキー設定でも初期化成功")
     void testInitialize_ErrorHandling() {
         // Given
         List<ApiProperties.ApiKeyConfig> keyConfigs = new ArrayList<>();
         
-        // ?????
+        // 無効な設定
         ApiProperties.ApiKeyConfig invalidConfig = new ApiProperties.ApiKeyConfig();
         invalidConfig.setKey("invalid-key");
         invalidConfig.setBoxConfigs(List.of("non-existent-config.json"));
         keyConfigs.add(invalidConfig);
 
-        // ?????
+        // 有効な設定
         ApiProperties.ApiKeyConfig validConfig = new ApiProperties.ApiKeyConfig();
         validConfig.setKey(TEST_API_KEY);
         validConfig.setBoxConfigs(List.of("classpath:box-config.json"));
@@ -348,8 +348,8 @@ class BoxClientManagerTest {
         clientManager.initialize();
 
         // Then
-        // ???API???????????????
-        // ???????????????????????????
+        // 無効なAPIキーは初期化時にエラーが発生するが処理は継続される
+        // 有効なAPIキーは正常に初期化される
         assertTrue(clientManager.isValidApiKey(TEST_API_KEY));
     }
 }

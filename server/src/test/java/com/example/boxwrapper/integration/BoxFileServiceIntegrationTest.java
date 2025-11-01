@@ -16,17 +16,17 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * BoxFileService?????.
+ * BoxFileServiceの統合テスト.
  *
- * <p>???Box API?????????????
- * ?????????????????????????</p>
+ * <p>実際のBox APIを使用してファイル操作をテストします。
+ * 以下の認証方法が使用できます。</p>
  * <ul>
  *   <li>BOX_DEVELOPER_TOKEN: Box Developer Token</li>
- *   <li>????box-config.json?????JWT????</li>
+ *   <li>またはbox-config.jsonにJWT認証設定を配置</li>
  * </ul>
  *
- * <p>??: ?????????Box API????????
- * ???????Box?????????????????</p>
+ * <p>注意: 実際のBox APIを使用するため
+ * 実際のBoxアカウントにリソースが作成されます。</p>
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -52,58 +52,58 @@ class BoxFileServiceIntegrationTest {
 
     @BeforeAll
     static void checkBoxConnection() {
-        // Box API????????????
+        // Box API接続の確認
         String developerToken = System.getenv("BOX_DEVELOPER_TOKEN");
         if (developerToken == null || developerToken.isEmpty()) {
-            System.out.println("??: BOX_DEVELOPER_TOKEN???????????");
-            System.out.println("????????????????Box Developer Token??????");
+            System.out.println("警告: BOX_DEVELOPER_TOKENが設定されていません");
+            System.out.println("統合テストには有効なBox Developer Tokenが必要です");
         }
     }
 
     @BeforeEach
     void setUp() {
-        // ????????????
+        // テスト用フォルダを作成
         try {
             String folderName = "test-integration-" + UUID.randomUUID().toString().substring(0, 8);
             var folderInfo = folderService.createFolder(TEST_API_KEY, ROOT_FOLDER_ID, folderName);
             testFolderId = folderInfo.getFolderId();
-            System.out.println("???????????????: " + folderName + " (ID: " + testFolderId + ")");
+            System.out.println("テスト用フォルダを作成しました: " + folderName + " (ID: " + testFolderId + ")");
         } catch (Exception e) {
-            System.err.println("??????????????????: " + e.getMessage());
-            // ??????????????
+            System.err.println("フォルダ作成に失敗しました: " + e.getMessage());
+            // テスト継続のためエラーは無視
         }
     }
 
     @AfterEach
     void tearDown() {
-        // ???????????????
+        // アップロードしたファイルを削除
         if (uploadedFileId != null) {
             try {
                 fileService.deleteFile(TEST_API_KEY, uploadedFileId);
-                System.out.println("??????????????: " + uploadedFileId);
+                System.out.println("アップロードファイルを削除しました: " + uploadedFileId);
             } catch (Exception e) {
-                System.err.println("?????????????????: " + e.getMessage());
+                System.err.println("ファイル削除に失敗しました: " + e.getMessage());
             }
         }
 
-        // ???????????
+        // テストフォルダを削除
         if (testFolderId != null) {
             try {
                 folderService.deleteFolder(TEST_API_KEY, testFolderId, true);
-                System.out.println("??????????????: " + testFolderId);
+                System.out.println("テストフォルダを削除しました: " + testFolderId);
             } catch (Exception e) {
-                System.err.println("?????????????????: " + e.getMessage());
+                System.err.println("フォルダ削除に失敗しました: " + e.getMessage());
             }
         }
     }
 
     @Test
-    @DisplayName("?????????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("ファイルアップロード - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void uploadFile_RealBoxAPI() throws IOException {
         // Given
         String fileName = "test-integration-" + UUID.randomUUID() + ".txt";
-        String content = "?????????????????\nIntegration test file content.";
+        String content = "これは統合テストファイルです\nIntegration test file content.";
         MockMultipartFile file = new MockMultipartFile(
             "file",
             fileName,
@@ -121,16 +121,16 @@ class BoxFileServiceIntegrationTest {
         assertEquals(fileName, response.getFileName());
         assertEquals(content.getBytes(StandardCharsets.UTF_8).length, response.getSize());
         assertNotNull(response.getCreatedAt());
-        System.out.println("????????????: " + response.getFileId());
+        System.out.println("アップロード成功: " + response.getFileId());
     }
 
     @Test
-    @DisplayName("???????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("ファイル情報取得 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void getFileInfo_RealBoxAPI() throws IOException {
-        // Given - ?????????????
+        // Given - テストファイルをアップロード
         String fileName = "test-info-" + UUID.randomUUID() + ".txt";
-        String content = "???????????";
+        String content = "テストファイルです";
         MockMultipartFile file = new MockMultipartFile(
             "file",
             fileName,
@@ -152,16 +152,16 @@ class BoxFileServiceIntegrationTest {
         assertEquals(testFolderId, fileInfo.getParentFolderId());
         assertNotNull(fileInfo.getCreatedAt());
         assertNotNull(fileInfo.getModifiedAt());
-        System.out.println("??????????: " + fileInfo.getFileId());
+        System.out.println("ファイル情報取得: " + fileInfo.getFileId());
     }
 
     @Test
-    @DisplayName("?????????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("ファイルダウンロード - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void downloadFile_RealBoxAPI() throws IOException {
-        // Given - ?????????????
+        // Given - テストファイルをアップロード
         String fileName = "test-download-" + UUID.randomUUID() + ".txt";
-        String content = "????????????????";
+        String content = "ダウンロードテストファイル";
         MockMultipartFile file = new MockMultipartFile(
             "file",
             fileName,
@@ -178,16 +178,16 @@ class BoxFileServiceIntegrationTest {
         // Then
         assertNotNull(downloadedContent);
         assertEquals(content, new String(downloadedContent, StandardCharsets.UTF_8));
-        System.out.println("????????????: " + downloadedContent.length + " bytes");
+        System.out.println("ダウンロード成功: " + downloadedContent.length + " bytes");
     }
 
     @Test
-    @DisplayName("?????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("ファイル削除 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void deleteFile_RealBoxAPI() throws IOException {
-        // Given - ?????????????
+        // Given - テストファイルをアップロード
         String fileName = "test-delete-" + UUID.randomUUID() + ".txt";
-        String content = "???????????";
+        String content = "削除テストファイル";
         MockMultipartFile file = new MockMultipartFile(
             "file",
             fileName,
@@ -203,22 +203,22 @@ class BoxFileServiceIntegrationTest {
             fileService.deleteFile(TEST_API_KEY, fileIdToDelete);
         });
 
-        // Then - ?????????????????????404???????
+        // Then - 削除後はファイル情報取得で404エラーが発生することを確認
         assertThrows(Exception.class, () -> {
             fileService.getFileInfo(TEST_API_KEY, fileIdToDelete);
         });
         
-        uploadedFileId = null; // tearDown?????????
-        System.out.println("????????: " + fileIdToDelete);
+        uploadedFileId = null; // tearDownで削除されないようにする
+        System.out.println("削除完了: " + fileIdToDelete);
     }
 
     @Test
-    @DisplayName("?????????? ? ???? ? ?????? ? ????????")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("ファイルライフサイクル - アップロード・取得・ダウンロード・削除")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void fileLifecycle_RealBoxAPI() throws IOException {
         // Given
         String fileName = "test-lifecycle-" + UUID.randomUUID() + ".txt";
-        String content = "?????????????????????\n" + System.currentTimeMillis();
+        String content = "ライフサイクルテストファイルです\n" + System.currentTimeMillis();
         MockMultipartFile file = new MockMultipartFile(
             "file",
             fileName,
@@ -226,28 +226,28 @@ class BoxFileServiceIntegrationTest {
             content.getBytes(StandardCharsets.UTF_8)
         );
 
-        // When & Then - ??????
+        // When & Then - アップロード
         var uploadResponse = fileService.uploadFile(TEST_API_KEY, testFolderId, file);
         assertNotNull(uploadResponse.getFileId());
         uploadedFileId = uploadResponse.getFileId();
-        System.out.println("1. ????????: " + uploadedFileId);
+        System.out.println("1. アップロード成功: " + uploadedFileId);
 
-        // ????
+        // 情報取得
         var fileInfo = fileService.getFileInfo(TEST_API_KEY, uploadedFileId);
         assertEquals(fileName, fileInfo.getFileName());
-        System.out.println("2. ??????: " + fileInfo.getFileName());
+        System.out.println("2. ファイル名: " + fileInfo.getFileName());
 
-        // ??????
+        // ダウンロード
         byte[] downloadedContent = fileService.downloadFile(TEST_API_KEY, uploadedFileId);
         assertEquals(content, new String(downloadedContent, StandardCharsets.UTF_8));
-        System.out.println("3. ????????: " + downloadedContent.length + " bytes");
+        System.out.println("3. ダウンロード成功: " + downloadedContent.length + " bytes");
 
-        // ??
+        // 削除
         assertDoesNotThrow(() -> {
             fileService.deleteFile(TEST_API_KEY, uploadedFileId);
         });
-        System.out.println("4. ????");
+        System.out.println("4. 削除完了");
         
-        uploadedFileId = null; // tearDown?????????
+        uploadedFileId = null; // tearDownで削除されないようにする
     }
 }

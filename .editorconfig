@@ -1,0 +1,36 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# 最上位のEditorConfig設定ファイル
+root = true
+
+# 全てのファイルに対して
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Javaファイル
+[*.java]
+indent_size = 4
+max_line_length = 120
+
+# Gradleファイル
+[*.gradle]
+indent_size = 4
+
+# YAMLファイル
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdownファイル
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# JSONファイル
+[*.json]
+indent_size = 2
+

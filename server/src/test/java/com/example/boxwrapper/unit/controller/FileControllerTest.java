@@ -33,9 +33,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * FileController????????.
+ * FileControllerのユニットテスト.
  *
- * <p>??????????????????????????????????????????</p>
+ * <p>ファイル操作APIのコントローラーレイヤーのテストを実行します。</p>
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FileController Unit Tests")
@@ -61,7 +61,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("uploadFile - ???????????????????")
+    @DisplayName("uploadFile - 正常系: ファイルアップロード成功")
     void testUploadFile_Success() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
@@ -95,7 +95,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("uploadFile - ?????????????????")
+    @DisplayName("uploadFile - 異常系: バリデーションエラー")
     void testUploadFile_ValidationError() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
@@ -105,7 +105,7 @@ class FileControllerTest {
             "test content".getBytes()
         );
 
-        // When & Then - folderId?????
+        // When & Then - folderIdが空の場合
         mockMvc.perform(multipart("/api/v1/files/upload")
                 .file(file)
                 .param("folderId", "")
@@ -116,7 +116,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("uploadFile - ??????????????????????????")
+    @DisplayName("uploadFile - 異常系: サービス層でエラーが発生した場合")
     void testUploadFile_ServiceException() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
@@ -138,7 +138,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("getFileInfo - ?????????????????")
+    @DisplayName("getFileInfo - 正常系: ファイル情報取得成功")
     void testGetFileInfo_Success() {
         // Given
         FileInfoResponse mockResponse = FileInfoResponse.builder()
@@ -171,7 +171,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("getFileInfo - ?????????????ResourceNotFoundException?????????")
+    @DisplayName("getFileInfo - 異常系: ファイルが見つからない場合ResourceNotFoundExceptionがスローされる")
     void testGetFileInfo_NotFound() {
         // Given
         when(fileService.getFileInfo(TEST_API_KEY, TEST_FILE_ID))
@@ -186,7 +186,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("downloadFile - ???????????????????")
+    @DisplayName("downloadFile - 正常系: ファイルダウンロード成功")
     void testDownloadFile_Success() {
         // Given
         byte[] fileContent = "test file content".getBytes();
@@ -210,7 +210,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("downloadFile - ?????????????ResourceNotFoundException?????????")
+    @DisplayName("downloadFile - 異常系: ファイルが見つからない場合ResourceNotFoundExceptionがスローされる")
     void testDownloadFile_NotFound() {
         // Given
         when(fileService.downloadFile(TEST_API_KEY, TEST_FILE_ID))
@@ -225,7 +225,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("downloadFile - ????????Content-Disposition???????????????")
+    @DisplayName("downloadFile - 正常系: Content-Dispositionヘッダーが正しく設定される")
     void testDownloadFile_ContentDisposition() {
         // Given
         byte[] fileContent = "test content".getBytes();
@@ -244,7 +244,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("deleteFile - ???????????????")
+    @DisplayName("deleteFile - 正常系: ファイル削除成功")
     void testDeleteFile_Success() {
         // Given
         doNothing().when(fileService).deleteFile(TEST_API_KEY, TEST_FILE_ID);
@@ -263,7 +263,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("deleteFile - ?????????????ResourceNotFoundException?????????")
+    @DisplayName("deleteFile - 異常系: ファイルが見つからない場合ResourceNotFoundExceptionがスローされる")
     void testDeleteFile_NotFound() {
         // Given
         doThrow(new ResourceNotFoundException("File", TEST_FILE_ID))
@@ -278,7 +278,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("deleteFile - ??????????????????????????")
+    @DisplayName("deleteFile - 異常系: サービス層でエラーが発生した場合")
     void testDeleteFile_ServiceException() {
         // Given
         doThrow(new BoxApiException("Delete failed", 500))
@@ -293,7 +293,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("???????????API?????????????")
+    @DisplayName("複数エンドポイント - APIキーの抽出が正しく動作すること")
     void testMultipleEndpoints_ApiKeyExtraction() {
         // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -325,7 +325,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("uploadFile - ???????????????????????")
+    @DisplayName("uploadFile - 正常系: 大きなファイルのアップロード")
     void testUploadFile_LargeFile() throws Exception {
         // Given
         byte[] largeContent = new byte[1024 * 1024]; // 1MB
@@ -361,7 +361,7 @@ class FileControllerTest {
     }
 
     @Test
-    @DisplayName("getFileInfo - ????????????????????")
+    @DisplayName("getFileInfo - 正常系: 空ファイルの情報取得")
     void testGetFileInfo_EmptyFileInfo() {
         // Given
         FileInfoResponse mockResponse = FileInfoResponse.builder()

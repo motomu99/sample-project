@@ -13,9 +13,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * BoxFolderService?????.
+ * BoxFolderServiceの統合テスト.
  *
- * <p>???Box API?????????????</p>
+ * <p>実際のBox APIを使用してフォルダ操作をテストします。</p>
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -40,49 +40,49 @@ class BoxFolderServiceIntegrationTest {
     static void checkBoxConnection() {
         String developerToken = System.getenv("BOX_DEVELOPER_TOKEN");
         if (developerToken == null || developerToken.isEmpty()) {
-            System.out.println("??: BOX_DEVELOPER_TOKEN???????????");
+            System.out.println("警告: BOX_DEVELOPER_TOKENが設定されていません");
         }
     }
 
     @BeforeEach
     void setUp() {
-        // ????????????
+        // テスト用フォルダを作成
         try {
             String folderName = "test-folder-" + UUID.randomUUID().toString().substring(0, 8);
             var folderInfo = folderService.createFolder(TEST_API_KEY, ROOT_FOLDER_ID, folderName);
             testFolderId = folderInfo.getFolderId();
-            System.out.println("???????????????: " + folderName + " (ID: " + testFolderId + ")");
+            System.out.println("テスト用フォルダを作成しました: " + folderName + " (ID: " + testFolderId + ")");
         } catch (Exception e) {
-            System.err.println("??????????????????: " + e.getMessage());
+            System.err.println("フォルダ作成に失敗しました: " + e.getMessage());
         }
     }
 
     @AfterEach
     void tearDown() {
-        // ?????????????????
+        // サブフォルダを削除
         if (subFolderId != null) {
             try {
                 folderService.deleteFolder(TEST_API_KEY, subFolderId, true);
-                System.out.println("????????????????: " + subFolderId);
+                System.out.println("サブフォルダを削除しました: " + subFolderId);
             } catch (Exception e) {
-                System.err.println("???????????????????: " + e.getMessage());
+                System.err.println("サブフォルダ削除に失敗しました: " + e.getMessage());
             }
         }
 
-        // ???????????
+        // テストフォルダを削除
         if (testFolderId != null) {
             try {
                 folderService.deleteFolder(TEST_API_KEY, testFolderId, true);
-                System.out.println("??????????????: " + testFolderId);
+                System.out.println("テストフォルダを削除しました: " + testFolderId);
             } catch (Exception e) {
-                System.err.println("?????????????????: " + e.getMessage());
+                System.err.println("テストフォルダ削除に失敗しました: " + e.getMessage());
             }
         }
     }
 
     @Test
-    @DisplayName("?????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("フォルダ作成 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void createFolder_RealBoxAPI() {
         // Given
         String folderName = "integration-test-" + UUID.randomUUID().toString().substring(0, 8);
@@ -96,21 +96,21 @@ class BoxFolderServiceIntegrationTest {
         assertEquals(folderName, response.getFolderName());
         assertEquals(ROOT_FOLDER_ID, response.getParentFolderId());
         assertNotNull(response.getCreatedAt());
-        System.out.println("????????: " + response.getFolderId());
+        System.out.println("フォルダID: " + response.getFolderId());
         
-        // ???????
+        // クリーンアップ
         try {
             folderService.deleteFolder(TEST_API_KEY, response.getFolderId(), true);
         } catch (Exception e) {
-            System.err.println("?????????: " + e.getMessage());
+            System.err.println("削除失敗: " + e.getMessage());
         }
     }
 
     @Test
-    @DisplayName("???????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("フォルダ情報取得 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void getFolderInfo_RealBoxAPI() {
-        // Given - ??????????????????
+        // Given - setUpで作成されたテストフォルダを使用
 
         // When
         var folderInfo = folderService.getFolderInfo(TEST_API_KEY, testFolderId);
@@ -121,33 +121,33 @@ class BoxFolderServiceIntegrationTest {
         assertNotNull(folderInfo.getFolderName());
         assertEquals(ROOT_FOLDER_ID, folderInfo.getParentFolderId());
         assertNotNull(folderInfo.getCreatedAt());
-        System.out.println("??????????: " + folderInfo.getFolderId());
+        System.out.println("フォルダ情報ID: " + folderInfo.getFolderId());
     }
 
     @Test
-    @DisplayName("????????????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("フォルダ内アイテム一覧取得 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void listFolderItems_RealBoxAPI() {
-        // Given - ??????????????????
+        // Given - setUpで作成されたテストフォルダを使用
 
         // When
         List<String> items = folderService.listFolderItems(TEST_API_KEY, testFolderId);
 
         // Then
         assertNotNull(items);
-        // ????????????????
+        // アイテムの有無に関わらずリストが返されることを確認
         assertTrue(items.isEmpty() || items.size() >= 0);
-        System.out.println("???????????????: " + items.size() + " items");
+        System.out.println("フォルダ内アイテム数: " + items.size() + " items");
     }
 
     @Test
-    @DisplayName("??????????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("サブフォルダ作成と削除 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void createAndDeleteSubFolder_RealBoxAPI() {
         // Given
         String subFolderName = "sub-folder-" + UUID.randomUUID().toString().substring(0, 8);
 
-        // When - ????????
+        // When - サブフォルダを作成
         var subFolderInfo = folderService.createFolder(TEST_API_KEY, testFolderId, subFolderName);
         subFolderId = subFolderInfo.getFolderId();
 
@@ -155,28 +155,28 @@ class BoxFolderServiceIntegrationTest {
         assertNotNull(subFolderInfo);
         assertEquals(subFolderName, subFolderInfo.getFolderName());
         assertEquals(testFolderId, subFolderInfo.getParentFolderId());
-        System.out.println("??????????: " + subFolderId);
+        System.out.println("サブフォルダID: " + subFolderId);
 
-        // ??
+        // 削除
         assertDoesNotThrow(() -> {
             folderService.deleteFolder(TEST_API_KEY, subFolderId, false);
         });
-        subFolderId = null; // tearDown?????????
-        System.out.println("??????????");
+        subFolderId = null; // tearDownで削除されないようにする
+        System.out.println("サブフォルダ削除完了");
     }
 
     @Test
-    @DisplayName("??????????? - ???Box API???")
-    @Disabled("???Box API?????????????????")
+    @DisplayName("フォルダ再帰的削除 - 実際のBox API使用")
+    @Disabled("実際のBox APIを使用するため、手動で有効化してください")
     void deleteFolderRecursive_RealBoxAPI() {
-        // Given - ??????????????????
+        // Given - setUpで作成されたテストフォルダを使用
         String folderToDelete = testFolderId;
-        testFolderId = null; // tearDown?????????
+        testFolderId = null; // tearDownで削除されないようにする
 
         // When & Then
         assertDoesNotThrow(() -> {
             folderService.deleteFolder(TEST_API_KEY, folderToDelete, true);
         });
-        System.out.println("?????????????: " + folderToDelete);
+        System.out.println("フォルダ再帰的削除完了: " + folderToDelete);
     }
 }

@@ -1,0 +1,12 @@
+# エンコーディングを明示的に指定して文字化けを防ぐ
+*.java text eol=lf charset=utf-8
+*.gradle text eol=lf charset=utf-8
+*.md text eol=lf charset=utf-8
+*.yml text eol=lf charset=utf-8
+*.yaml text eol=lf charset=utf-8
+*.json text eol=lf charset=utf-8
+*.properties text eol=lf charset=utf-8
+
+# デフォルト設定
+* text=auto eol=lf
+

@@ -69,7 +69,7 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-    ignoreFailures = true  // ????????????????????
+    ignoreFailures = true  // テスト失敗時もビルドを継続
 }
 
 jacoco {

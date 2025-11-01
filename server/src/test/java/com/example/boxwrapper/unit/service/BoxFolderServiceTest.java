@@ -300,9 +300,8 @@ class BoxFolderServiceTest {
         when(mockInfo.getCreatedAt()).thenReturn(new Date());
         when(mockInfo.getModifiedAt()).thenReturn(new Date());
 
-        BoxFolder.ItemCollection mockCollection = mock(BoxFolder.ItemCollection.class);
-        when(mockCollection.getTotalCount()).thenReturn(0L);
-        when(mockInfo.getItemCollection()).thenReturn(mockCollection);
+        // Box SDK API変更により、ItemCollectionは削除
+        // when(mockInfo.getItemCollection()).thenReturn(mockCollection);
 
         return mockInfo;
     }

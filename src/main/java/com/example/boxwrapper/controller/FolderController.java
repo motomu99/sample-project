@@ -19,7 +19,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * フォルダ操作コントローラー
+ * フォルダ操作コントローラー.
+ *
+ * <p>Box フォルダに関するREST APIエンドポイントを提供します。
+ * 作成、一覧取得、情報取得、削除の操作をサポートします。</p>
+ *
+ * <p>全てのエンドポイントはAPIキー認証（X-API-Keyヘッダー）が必要です。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @RestController
@@ -32,6 +39,13 @@ public class FolderController {
 
     private final BoxFolderService folderService;
 
+    /**
+     * 新しいフォルダを作成します.
+     *
+     * @param request フォルダ作成リクエスト（親フォルダID、フォルダ名）
+     * @param httpRequest HTTPリクエスト（APIキーの取得に使用）
+     * @return 作成されたフォルダ情報
+     */
     @PostMapping
     @Operation(summary = "フォルダ作成", description = "新しいフォルダを作成")
     public ResponseEntity<FolderInfoResponse> createFolder(
@@ -48,6 +62,13 @@ public class FolderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * フォルダのメタデータ情報を取得します.
+     *
+     * @param folderId 対象フォルダのID
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return フォルダ情報（名前、親フォルダID、アイテム数など）
+     */
     @GetMapping("/{folderId}")
     @Operation(summary = "フォルダ情報取得", description = "フォルダのメタデータを取得")
     public ResponseEntity<FolderInfoResponse> getFolderInfo(
@@ -61,6 +82,13 @@ public class FolderController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * フォルダ内のアイテム一覧を取得します.
+     *
+     * @param folderId 対象フォルダのID
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return フォルダ内アイテムの名前リスト
+     */
     @GetMapping("/{folderId}/items")
     @Operation(summary = "フォルダ内アイテム一覧", description = "フォルダ内のアイテム一覧を取得")
     public ResponseEntity<List<String>> listFolderItems(
@@ -74,6 +102,14 @@ public class FolderController {
         return ResponseEntity.ok(items);
     }
 
+    /**
+     * フォルダを削除します.
+     *
+     * @param folderId 削除するフォルダのID
+     * @param recursive trueの場合、フォルダ内のアイテムも全て削除
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return 削除成功時は204 No Content
+     */
     @DeleteMapping("/{folderId}")
     @Operation(summary = "フォルダ削除", description = "指定されたフォルダを削除")
     public ResponseEntity<Void> deleteFolder(

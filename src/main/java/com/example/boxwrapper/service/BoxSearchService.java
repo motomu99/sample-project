@@ -15,7 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Box 検索サービス
+ * Box 検索サービス.
+ *
+ * <p>Box SDKを使用した検索機能を提供します。
+ * キーワード検索、ファイルタイプフィルタ、ページネーションに対応しています。</p>
+ *
+ * <p>検索結果はCaffeineキャッシュで5分間保持され、
+ * 同じクエリに対する繰り返しアクセスのパフォーマンスを向上させます。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -26,7 +34,25 @@ public class BoxSearchService {
     private final RateLimiterManager rateLimiterManager;
 
     /**
-     * ファイル/フォルダを検索
+     * ファイルおよびフォルダを検索します.
+     *
+     * <p>指定されたキーワードでBoxのコンテンツを検索し、
+     * マッチしたアイテムの名前をリストで返します。</p>
+     *
+     * <p>検索オプション：
+     * <ul>
+     *   <li>type: "file"または"folder"でフィルタリング</li>
+     *   <li>fileExtension: 拡張子でフィルタリング（例: "pdf"）</li>
+     *   <li>offset/limit: ページネーション制御</li>
+     * </ul>
+     * </p>
+     *
+     * <p>検索結果はクエリとタイプの組み合わせでキャッシュされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param request 検索条件（クエリ、タイプ、ページネーション等）
+     * @return 検索結果のアイテム名リスト
+     * @throws BoxApiException Box API呼び出しに失敗した場合
      */
     @Retry(name = "boxApi")
     @Cacheable(value = "searchResults", key = "#request.query + '_' + #request.type")

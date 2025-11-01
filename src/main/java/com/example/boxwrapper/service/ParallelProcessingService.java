@@ -14,7 +14,21 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * 並列処理サービス
+ * 並列処理サービス.
+ *
+ * <p>複数のファイルを並列にアップロード/ダウンロードする機能を提供します。
+ * セマフォによる同時実行数制御により、レート制限を考慮した安全な並列処理を実現します。</p>
+ *
+ * <p>並列度の設定：
+ * <ul>
+ *   <li>最大同時アップロード数: 5（設定変更可能）</li>
+ *   <li>最大同時ダウンロード数: 5（設定変更可能）</li>
+ * </ul>
+ * </p>
+ *
+ * <p>部分的な失敗でも処理を続行し、成功/失敗の詳細情報を返します。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -25,7 +39,18 @@ public class ParallelProcessingService {
     private final AsyncProperties asyncProperties;
 
     /**
-     * 複数ファイルを並列アップロード
+     * 複数のファイルを並列アップロードします.
+     *
+     * <p>指定されたファイルリストを並列にアップロードし、
+     * 全ての処理が完了するまで待機します。セマフォにより、
+     * 設定された最大同時アップロード数を超えないよう制御されます。</p>
+     *
+     * <p>一部のファイルがアップロード失敗しても、他のファイルの処理は続行されます。
+     * 結果には成功/失敗したファイルの詳細情報が含まれます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param requests アップロードするファイルのリクエストリスト
+     * @return 非同期処理結果（成功数、失敗数、詳細情報を含む）
      */
     @Async
     public CompletableFuture<BatchUploadResult> uploadFilesParallel(
@@ -98,7 +123,17 @@ public class ParallelProcessingService {
     }
 
     /**
-     * 複数ファイルを並列ダウンロード
+     * 複数のファイルを並列ダウンロードします.
+     *
+     * <p>指定されたファイルIDリストのファイルを並列にダウンロードし、
+     * 全ての処理が完了するまで待機します。セマフォにより、
+     * 設定された最大同時ダウンロード数を超えないよう制御されます。</p>
+     *
+     * <p>失敗したファイルに対してはnullが返されます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param fileIds ダウンロードするファイルのIDリスト
+     * @return 非同期処理結果（ファイル内容のバイト配列リスト、失敗時はnull）
      */
     @Async
     public CompletableFuture<List<byte[]>> downloadFilesParallel(

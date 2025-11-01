@@ -15,7 +15,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 検索コントローラー
+ * 検索コントローラー.
+ *
+ * <p>Box のファイル・フォルダ検索機能を提供するREST APIエンドポイントです。
+ * キーワード検索、タイプフィルタ、ページネーションに対応しています。</p>
+ *
+ * <p>全てのエンドポイントはAPIキー認証（X-API-Keyヘッダー）が必要です。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @RestController
@@ -28,6 +35,19 @@ public class SearchController {
 
     private final BoxSearchService searchService;
 
+    /**
+     * ファイルおよびフォルダを検索します.
+     *
+     * <p>クエリパラメータで検索条件を指定します。</p>
+     *
+     * @param query 検索キーワード（必須）
+     * @param type フィルタタイプ（"file"または"folder"、オプション）
+     * @param offset ページネーションのオフセット（オプション）
+     * @param limit 取得件数の上限（オプション）
+     * @param fileExtension ファイル拡張子フィルタ（オプション）
+     * @param request HTTPリクエスト（APIキーの取得に使用）
+     * @return 検索結果のアイテム名リスト
+     */
     @GetMapping
     @Operation(summary = "ファイル/フォルダ検索", description = "キーワードでファイル・フォルダを検索")
     public ResponseEntity<List<String>> search(

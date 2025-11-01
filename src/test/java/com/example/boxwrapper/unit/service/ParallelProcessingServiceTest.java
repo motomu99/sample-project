@@ -95,7 +95,7 @@ class ParallelProcessingServiceTest {
         FileUploadResponse mockResponse = FileUploadResponse.builder()
             .fileId("file123")
             .fileName("test.txt")
-            .fileSize(12L)
+            .size(12L)
             .build();
 
         when(fileService.uploadFile(TEST_API_KEY, TEST_FOLDER_ID, mockFile))
@@ -136,7 +136,7 @@ class ParallelProcessingServiceTest {
             FileUploadResponse mockResponse = FileUploadResponse.builder()
                 .fileId("file" + i)
                 .fileName("test" + i + ".txt")
-                .fileSize(10L)
+                .size(10L)
                 .build();
 
             when(fileService.uploadFile(eq(TEST_API_KEY), eq(TEST_FOLDER_ID), eq(mockFile)))
@@ -196,9 +196,9 @@ class ParallelProcessingServiceTest {
         requests.add(request3);
 
         FileUploadResponse mockResponse1 = FileUploadResponse.builder()
-            .fileId("file1").fileName("test1.txt").fileSize(10L).build();
+            .fileId("file1").fileName("test1.txt").size(10L).build();
         FileUploadResponse mockResponse3 = FileUploadResponse.builder()
-            .fileId("file3").fileName("test3.txt").fileSize(10L).build();
+            .fileId("file3").fileName("test3.txt").size(10L).build();
 
         when(fileService.uploadFile(TEST_API_KEY, TEST_FOLDER_ID, mockFile1))
             .thenReturn(mockResponse1);

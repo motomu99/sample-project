@@ -160,6 +160,73 @@ class BoxFileServiceTest {
     }
 
     @Test
+    @DisplayName("ファイルダウンロード - 正常系")
+    void downloadFile_Success() throws Exception {
+        // Given
+        byte[] fileContent = "test file content".getBytes();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(fileContent);
+
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        doAnswer(invocation -> {
+            ByteArrayOutputStream os = invocation.getArgument(0);
+            os.write(fileContent);
+            return null;
+        }).when(mockFile).download(any(ByteArrayOutputStream.class));
+
+        // When
+        byte[] result = fileService.downloadFile(API_KEY, FILE_ID);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(fileContent);
+        verify(rateLimiterManager).tryConsume(API_KEY);
+        verify(rateLimiterManager).handleSuccess(API_KEY);
+        verify(mockFile).download(any(ByteArrayOutputStream.class));
+    }
+
+    @Test
+    @DisplayName("ファイルダウンロード - レート制限超過")
+    void downloadFile_RateLimitExceeded() {
+        // Given
+        when(rateLimiterManager.tryConsume(API_KEY)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.downloadFile(API_KEY, FILE_ID))
+            .isInstanceOf(BoxApiException.class)
+            .hasMessageContaining("レート制限");
+    }
+
+    @Test
+    @DisplayName("ファイルダウンロード - ファイルが存在しない")
+    void downloadFile_NotFound() {
+        // Given
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        when(mockFile.download(any(ByteArrayOutputStream.class)))
+            .thenThrow(new BoxAPIException("Not found", 404, null));
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.downloadFile(API_KEY, FILE_ID))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("File");
+    }
+
+    @Test
+    @DisplayName("ファイルダウンロード - 429エラー時にrateLimiterManager.handleRateLimitExceededが呼ばれること")
+    void downloadFile_Handles429Error() {
+        // Given
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        when(mockFile.download(any(ByteArrayOutputStream.class)))
+            .thenThrow(new BoxAPIException("Rate limit exceeded", 429, null));
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.downloadFile(API_KEY, FILE_ID))
+            .isInstanceOf(BoxApiException.class);
+
+        verify(rateLimiterManager).handleRateLimitExceeded(API_KEY);
+    }
+
+    @Test
     @DisplayName("ファイル削除 - 正常系")
     void deleteFile_Success() {
         // Given
@@ -172,5 +239,131 @@ class BoxFileServiceTest {
         // Then
         verify(mockFile).delete();
         verify(rateLimiterManager).handleSuccess(API_KEY);
+    }
+
+    @Test
+    @DisplayName("ファイル削除 - レート制限超過")
+    void deleteFile_RateLimitExceeded() {
+        // Given
+        when(rateLimiterManager.tryConsume(API_KEY)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.deleteFile(API_KEY, FILE_ID))
+            .isInstanceOf(BoxApiException.class)
+            .hasMessageContaining("レート制限");
+    }
+
+    @Test
+    @DisplayName("ファイル削除 - ファイルが存在しない")
+    void deleteFile_NotFound() {
+        // Given
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        doThrow(new BoxAPIException("Not found", 404, null))
+            .when(mockFile).delete();
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.deleteFile(API_KEY, FILE_ID))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("File");
+    }
+
+    @Test
+    @DisplayName("ファイル削除 - 429エラー時にrateLimiterManager.handleRateLimitExceededが呼ばれること")
+    void deleteFile_Handles429Error() {
+        // Given
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        doThrow(new BoxAPIException("Rate limit exceeded", 429, null))
+            .when(mockFile).delete();
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.deleteFile(API_KEY, FILE_ID))
+            .isInstanceOf(BoxApiException.class);
+
+        verify(rateLimiterManager).handleRateLimitExceeded(API_KEY);
+    }
+
+    @Test
+    @DisplayName("ファイル情報取得 - 429エラー時にrateLimiterManager.handleRateLimitExceededが呼ばれること")
+    void getFileInfo_Handles429Error() {
+        // Given
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        when(mockFile.getInfo()).thenThrow(new BoxAPIException("Rate limit exceeded", 429, null));
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.getFileInfo(API_KEY, FILE_ID))
+            .isInstanceOf(BoxApiException.class);
+
+        verify(rateLimiterManager).handleRateLimitExceeded(API_KEY);
+    }
+
+    @Test
+    @DisplayName("ファイルアップロード - 429エラー時にrateLimiterManager.handleRateLimitExceededが呼ばれること")
+    void uploadFile_Handles429Error() throws Exception {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "test.txt",
+            "text/plain",
+            "test content".getBytes()
+        );
+
+        when(mockConnection.getFolder(FOLDER_ID)).thenReturn(mockFolder);
+        when(mockFolder.uploadFile(any(), eq("test.txt")))
+            .thenThrow(new BoxAPIException("Rate limit exceeded", 429, null));
+
+        // When & Then
+        assertThatThrownBy(() -> fileService.uploadFile(API_KEY, FOLDER_ID, file))
+            .isInstanceOf(BoxApiException.class);
+
+        verify(rateLimiterManager).handleRateLimitExceeded(API_KEY);
+    }
+
+    @Test
+    @DisplayName("ファイル情報取得 - 親フォルダがnullの場合、parentFolderIdがnullになること")
+    void getFileInfo_ParentFolderIsNull() {
+        // Given
+        BoxFile.Info mockFileInfo = mock(BoxFile.Info.class);
+        when(mockFileInfo.getID()).thenReturn(FILE_ID);
+        when(mockFileInfo.getName()).thenReturn("test.txt");
+        when(mockFileInfo.getSize()).thenReturn(12L);
+        when(mockFileInfo.getCreatedAt()).thenReturn(new Date());
+        when(mockFileInfo.getModifiedAt()).thenReturn(new Date());
+        when(mockFileInfo.getSha1()).thenReturn("abc123");
+        when(mockFileInfo.getParent()).thenReturn(null); // 親フォルダがnull
+
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        when(mockFile.getInfo()).thenReturn(mockFileInfo);
+
+        // When
+        FileInfoResponse response = fileService.getFileInfo(API_KEY, FILE_ID);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getParentFolderId()).isNull();
+    }
+
+    @Test
+    @DisplayName("ファイル情報取得 - 日付がnullの場合、LocalDateTimeがnullになること")
+    void getFileInfo_NullDates() {
+        // Given
+        BoxFile.Info mockFileInfo = mock(BoxFile.Info.class);
+        when(mockFileInfo.getID()).thenReturn(FILE_ID);
+        when(mockFileInfo.getName()).thenReturn("test.txt");
+        when(mockFileInfo.getSize()).thenReturn(12L);
+        when(mockFileInfo.getCreatedAt()).thenReturn(null); // null
+        when(mockFileInfo.getModifiedAt()).thenReturn(null); // null
+        when(mockFileInfo.getSha1()).thenReturn("abc123");
+        when(mockFileInfo.getParent()).thenReturn(null);
+
+        when(mockConnection.getFile(FILE_ID)).thenReturn(mockFile);
+        when(mockFile.getInfo()).thenReturn(mockFileInfo);
+
+        // When
+        FileInfoResponse response = fileService.getFileInfo(API_KEY, FILE_ID);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.getCreatedAt()).isNull();
+        assertThat(response.getModifiedAt()).isNull();
     }
 }

@@ -12,7 +12,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * レート制限マネージャー（Bucket4j使用）
+ * レート制限マネージャー（Bucket4j使用）.
+ *
+ * <p>Box APIへのリクエスト頻度を制御し、レート制限エラー（429）を防ぎます。
+ * アダプティブ制御により、429エラー発生時に自動的にレートを下げ、
+ * 成功時には徐々にレートを元に戻します。</p>
+ *
+ * <p>APIキーごとに独立したBucket（トークンバケット）を管理し、
+ * マルチスレッド環境でも安全に動作します。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -52,7 +61,15 @@ public class RateLimiterManager {
     }
 
     /**
-     * リクエストを試行（許可されればtrue）
+     * リクエストの実行を試行します.
+     *
+     * <p>レート制限内であればtrueを返し、リクエストの実行を許可します。
+     * 制限を超えている場合はfalseを返し、リクエストを拒否します。</p>
+     *
+     * <p>レート制限が無効化されている場合は常にtrueを返します。</p>
+     *
+     * @param apiKey リクエストを行うAPIキー
+     * @return リクエストが許可された場合true、拒否された場合false
      */
     public boolean tryConsume(String apiKey) {
         if (!boxProperties.getRateLimit().isEnabled()) {

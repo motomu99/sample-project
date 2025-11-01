@@ -23,7 +23,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * Box ファイル操作サービス
+ * Box ファイル操作サービス.
+ *
+ * <p>Box SDKを使用したファイル操作（アップロード、ダウンロード、情報取得、削除）を
+ * 提供します。レート制限、リトライ、キャッシング機能を統合しています。</p>
+ *
+ * <p>全てのメソッドはResilience4jによる自動リトライを適用し、
+ * 一時的なエラーから自動回復します。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -34,7 +42,20 @@ public class BoxFileService {
     private final RateLimiterManager rateLimiterManager;
 
     /**
-     * ファイルをアップロード
+     * ファイルをBoxにアップロードします.
+     *
+     * <p>指定されたフォルダにマルチパートファイルをアップロードし、
+     * アップロード結果の情報（ファイルID、名前、サイズなど）を返します。</p>
+     *
+     * <p>レート制限を自動的に適用し、制限超過時は429エラーをスローします。
+     * 一時的なエラー（5xx、429）の場合は自動的にリトライされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param folderId アップロード先のフォルダID（例: "0"はルートフォルダ）
+     * @param file アップロードするマルチパートファイル
+     * @return アップロードされたファイルの情報
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException フォルダが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     public FileUploadResponse uploadFile(String apiKey, String folderId, MultipartFile file) {
@@ -68,7 +89,16 @@ public class BoxFileService {
     }
 
     /**
-     * ファイル情報を取得
+     * ファイルのメタデータ情報を取得します.
+     *
+     * <p>ファイルID、名前、サイズ、親フォルダID、作成日時、更新日時、SHA1ハッシュなどの
+     * 詳細情報を取得します。結果は5分間キャッシュされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param fileId 情報を取得するファイルのID
+     * @return ファイルのメタデータ情報
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException ファイルが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     @Cacheable(value = "fileMetadata", key = "#fileId")
@@ -102,7 +132,16 @@ public class BoxFileService {
     }
 
     /**
-     * ファイルをダウンロード
+     * ファイルの内容をダウンロードします.
+     *
+     * <p>ファイル全体をバイト配列として取得します。
+     * 大容量ファイルの場合は、メモリ使用量に注意してください。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param fileId ダウンロードするファイルのID
+     * @return ファイルの内容（バイト配列）
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException ファイルが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     public byte[] downloadFile(String apiKey, String fileId) {
@@ -137,7 +176,17 @@ public class BoxFileService {
     }
 
     /**
-     * ファイルを削除
+     * ファイルを削除します.
+     *
+     * <p>指定されたファイルをBoxから完全に削除します。
+     * 削除されたファイルはゴミ箱に移動され、一定期間後に完全削除されます。</p>
+     *
+     * <p>削除成功時、キャッシュされていたファイルメタデータも自動的にクリアされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param fileId 削除するファイルのID
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException ファイルが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     @CacheEvict(value = "fileMetadata", key = "#fileId")

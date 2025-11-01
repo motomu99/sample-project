@@ -20,7 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Box フォルダ操作サービス
+ * Box フォルダ操作サービス.
+ *
+ * <p>Box SDKを使用したフォルダ操作（作成、一覧取得、情報取得、削除）を
+ * 提供します。レート制限、リトライ、キャッシング機能を統合しています。</p>
+ *
+ * <p>フォルダ情報はCaffeineキャッシュで5分間保持され、
+ * 頻繁なアクセスに対するパフォーマンスを向上させます。</p>
+ *
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -31,7 +39,17 @@ public class BoxFolderService {
     private final RateLimiterManager rateLimiterManager;
 
     /**
-     * フォルダを作成
+     * 新しいフォルダを作成します.
+     *
+     * <p>指定された親フォルダ内に新しいフォルダを作成し、
+     * 作成されたフォルダの情報を返します。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param parentFolderId 親フォルダのID（例: "0"はルートフォルダ）
+     * @param folderName 作成するフォルダの名前
+     * @return 作成されたフォルダの情報
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException 親フォルダが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     public FolderInfoResponse createFolder(String apiKey, String parentFolderId, String folderName) {
@@ -64,7 +82,16 @@ public class BoxFolderService {
     }
 
     /**
-     * フォルダ情報を取得
+     * フォルダのメタデータ情報を取得します.
+     *
+     * <p>フォルダID、名前、親フォルダID、アイテム数、作成日時、更新日時などの
+     * 詳細情報を取得します。結果は5分間キャッシュされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param folderId 情報を取得するフォルダのID
+     * @return フォルダのメタデータ情報
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException フォルダが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     @Cacheable(value = "folderInfo", key = "#folderId")
@@ -98,7 +125,16 @@ public class BoxFolderService {
     }
 
     /**
-     * フォルダ内アイテム一覧を取得
+     * フォルダ内のアイテム一覧を取得します.
+     *
+     * <p>指定されたフォルダに含まれる全てのファイルとサブフォルダの
+     * 名前をリストで返します。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param folderId 一覧を取得するフォルダのID
+     * @return フォルダ内アイテムの名前リスト
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException フォルダが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     public List<String> listFolderItems(String apiKey, String folderId) {
@@ -135,7 +171,18 @@ public class BoxFolderService {
     }
 
     /**
-     * フォルダを削除
+     * フォルダを削除します.
+     *
+     * <p>指定されたフォルダをBoxから削除します。
+     * recursiveがtrueの場合、フォルダ内の全てのアイテムも再帰的に削除されます。</p>
+     *
+     * <p>削除成功時、キャッシュされていたフォルダ情報も自動的にクリアされます。</p>
+     *
+     * @param apiKey 認証用のAPIキー
+     * @param folderId 削除するフォルダのID
+     * @param recursive trueの場合、フォルダ内のアイテムも全て削除
+     * @throws BoxApiException Box API呼び出しに失敗した場合
+     * @throws ResourceNotFoundException フォルダが存在しない場合（404）
      */
     @Retry(name = "boxApi")
     @CacheEvict(value = "folderInfo", key = "#folderId")
